@@ -1,15 +1,19 @@
 package controllers
 
 import (
-  "net/http"
+	"encoding/json"
+	"net/http"
 
-  "github.com/julienschmidt/httprouter"
+	"github.com/julienschmidt/httprouter"
 
-  "github.com/ianjdarrow/slow-hn/models"
+	"github.com/ianjdarrow/slow-hn/models"
 )
 
-var AllPosts = make(map[int]models.Post)
-
 func GetIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-  w.Write([]byte("Hello!"))
+	posts := make([]models.Post, 0)
+	for _, post := range AllPosts {
+		posts = append(posts, post)
+	}
+	result, _ := json.Marshal(posts)
+	w.Write(result)
 }
