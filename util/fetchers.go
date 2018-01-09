@@ -9,13 +9,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ianjdarrow/slow-hn/controllers"
+	"github.com/jmoiron/sqlx"
+
 	"github.com/ianjdarrow/slow-hn/models"
 )
 
 var (
 	topPostsUrl string = "https://hacker-news.firebaseio.com/v0/topstories.json"
-	numPosts    int    = 20
+	numPosts    int    = 50
 )
 
 func FetchTopPosts() []models.Post {
@@ -41,7 +42,7 @@ func FetchTopPosts() []models.Post {
 
 func ScorePosts(posts []models.Post) []models.Score {
 	var scores []models.Score
-	now := time.Now()
+	now := time.Now().Unix()
 	for i, post := range posts {
 		score := models.Score{
 			ID:    post.ID,
@@ -53,21 +54,38 @@ func ScorePosts(posts []models.Post) []models.Score {
 	return scores
 }
 
-func UpdatePosts() {
+func UpdatePosts(db *sqlx.DB) {
 	posts := FetchTopPosts()
 	scores := ScorePosts(posts)
+
+	postTx := db.MustBegin()
 	for _, post := range posts {
-		if _, ok := controllers.AllPosts[post.ID]; !ok {
-			controllers.AllPosts[post.ID] = post
-		}
+		postTx.MustExec(`
+      REPLACE INTO posts(by, id, score, time, title, type, url)
+      VALUES (?, ?, ?, ?, ?, ?, ?);`,
+			post.By, post.ID, post.Score, post.Time, post.Title, post.Type, post.URL)
 	}
+	err := postTx.Commit()
+	if err != nil {
+		fmt.Printf("Database write error: %s\n", err)
+	}
+
+	scoreTx := db.MustBegin()
 	for _, score := range scores {
-		controllers.AllPosts[score.ID] = controllers.AllPosts[score.ID].AddScore(score)
+		scoreTx.MustExec(`
+      INSERT INTO scores(id, score, time)
+      VALUES(?, ?, ?);`,
+			score.ID, score.Score, score.Time)
 	}
-	fmt.Printf("Updated posts at %s, total count: %v\n", time.Now(), len(controllers.AllPosts))
+	err = scoreTx.Commit()
+	if err != nil {
+		fmt.Printf("Database write error: %s\n", err)
+	}
+
+	fmt.Printf("Updated posts at %s\n", time.Now())
 	fmt.Printf("Top post: %s\n", posts[0].Title)
-	time.Sleep(5 * time.Minute)
-	UpdatePosts()
+	time.Sleep(60 * time.Minute)
+	UpdatePosts(db)
 }
 
 func getHTML(url string) []byte {
