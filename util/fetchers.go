@@ -84,7 +84,7 @@ func UpdatePosts(db *sqlx.DB) {
 
 	fmt.Printf("Updated posts at %s\n", time.Now())
 	fmt.Printf("Top post: %s\n", posts[0].Title)
-	time.Sleep(60 * time.Minute)
+	time.Sleep(time.Hour)
 	UpdatePosts(db)
 }
 

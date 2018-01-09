@@ -34,7 +34,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		  s.time BETWEEN ? AND ?
 		GROUP BY p.id
 		ORDER BY sum(s.score) DESC
-		LIMIT 20;`, start, end)
+		LIMIT 30;`, start, end)
 	resp, err := json.Marshal(posts)
 	if err != nil {
 		fmt.Println(err)
