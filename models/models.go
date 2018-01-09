@@ -11,14 +11,15 @@ type Score struct {
 }
 
 type Post struct {
-	By         string  `json:"by"`
-	ID         int     `json:"id"`
-	Score      int     `json:"score"`
-	Time       int     `json:"time"`
-	Title      string  `json:"title"`
-	Type       string  `json:"type"`
-	URL        string  `json:"url"`
-	Aggregated float64 `json:"aggregated_score"`
+	By          string  `json:"by"`
+	ID          int     `json:"id"`
+	Score       int     `json:"score"`
+	Time        int     `json:"time"`
+	Title       string  `json:"title"`
+	Type        string  `json:"type"`
+	URL         string  `json:"url"`
+	Descendants int     `json:"descendants"`
+	Aggregated  float64 `json:"aggregated_score"`
 }
 
 func (p Post) Summarize() {

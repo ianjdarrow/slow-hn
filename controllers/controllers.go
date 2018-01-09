@@ -24,6 +24,9 @@ func GetPosts(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		  p.score,
 		  p.by,
 		  p.url,
+		  p.time,
+		  p.type,
+		  p.descendants,
 		  sum(s.score) as aggregated
 		FROM 
 		  posts p INNER JOIN scores s ON s.id = p.id
@@ -36,15 +39,18 @@ func GetPosts(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	w.WriteHeader(200)
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	w.WriteHeader(200)
 	w.Write(resp)
 }
 
 func GetPostsPreflight(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	w.WriteHeader(200)
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	w.WriteHeader(200)
 	w.Write([]byte(""))
 }

@@ -31,6 +31,7 @@ func CreateTables() {
       time INTEGER,  
       title TEXT,  
       type VARCHAR(255),  
+      descendants INTEGER,  
       url TEXT  
     );`
 	scoreSchema := `

@@ -61,9 +61,9 @@ func UpdatePosts(db *sqlx.DB) {
 	postTx := db.MustBegin()
 	for _, post := range posts {
 		postTx.MustExec(`
-      REPLACE INTO posts(by, id, score, time, title, type, url)
-      VALUES (?, ?, ?, ?, ?, ?, ?);`,
-			post.By, post.ID, post.Score, post.Time, post.Title, post.Type, post.URL)
+      REPLACE INTO posts(by, id, score, time, title, type, url, descendants)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+			post.By, post.ID, post.Score, post.Time, post.Title, post.Type, post.URL, post.Descendants)
 	}
 	err := postTx.Commit()
 	if err != nil {
