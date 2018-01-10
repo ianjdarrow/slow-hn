@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/ianjdarrow/slow-hn/models"
 	"github.com/jmoiron/sqlx"
@@ -13,6 +14,7 @@ import (
 var DB *sqlx.DB
 
 func GetPosts(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	requestBegin := time.Now()
 	queryValues := r.URL.Query()
 	start := queryValues.Get("start")
 	end := queryValues.Get("end")
@@ -33,7 +35,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		WHERE
 		  s.time BETWEEN ? AND ?
 		GROUP BY p.id
-		ORDER BY sum(s.score) DESC
+		ORDER BY (sum(s.score) + (p.score / 400) + (p.descendants / 100)) DESC
 		LIMIT 30;`, start, end)
 	resp, err := json.Marshal(posts)
 	if err != nil {
@@ -45,6 +47,8 @@ func GetPosts(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 	w.WriteHeader(200)
 	w.Write(resp)
+	requestTime := time.Now().Sub(requestBegin)
+	fmt.Printf("Served /posts, total time: %s\n", requestTime)
 }
 
 func GetPostsPreflight(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -47,7 +46,7 @@ func ScorePosts(posts []models.Post) []models.Score {
 		score := models.Score{
 			ID:    post.ID,
 			Time:  now,
-			Score: 10 / (math.Sqrt(float64(i+1)) + 1),
+			Score: float64(10.0 / ((i + 1) + 1)),
 		}
 		scores = append(scores, score)
 	}
