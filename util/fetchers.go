@@ -56,7 +56,6 @@ func ScorePosts(posts []models.Post) []models.Score {
 
 func UpdatePosts(db *sqlx.DB) {
 	posts := FetchTopPosts()
-	scores := ScorePosts(posts)
 
 	postTx := db.MustBegin()
 	for _, post := range posts {
@@ -70,21 +69,34 @@ func UpdatePosts(db *sqlx.DB) {
 		fmt.Printf("Database write error: %s\n", err)
 	}
 
-	scoreTx := db.MustBegin()
-	for _, score := range scores {
-		scoreTx.MustExec(`
-      INSERT INTO scores(id, score, time)
-      VALUES(?, ?, ?);`,
-			score.ID, score.Score, score.Time)
-	}
-	err = scoreTx.Commit()
+	var lastUpdate int64
+	updateCheck := `SELECT max(time) FROM scores;`
+	err = db.Get(&lastUpdate, updateCheck)
 	if err != nil {
-		fmt.Printf("Database write error: %s\n", err)
+		fmt.Printf("Error checking last update time: %s\n", err)
+	}
+	now := time.Now().Unix()
+	if now-lastUpdate > 60*60 {
+		scores := ScorePosts(posts)
+		scoreTx := db.MustBegin()
+		for _, score := range scores {
+			scoreTx.MustExec(`
+	      INSERT INTO scores(id, score, time)
+	      VALUES(?, ?, ?);`,
+				score.ID, score.Score, score.Time)
+		}
+		err = scoreTx.Commit()
+		if err != nil {
+			fmt.Printf("Database write error: %s\n", err)
+		}
+		fmt.Println("Score snapshot complete")
+	} else {
+		fmt.Printf("Next score snapshot in %v seconds\n", 60*60-(now-lastUpdate))
 	}
 
 	fmt.Printf("Updated posts at %s\n", time.Now())
 	fmt.Printf("Top post: %s\n", posts[0].Title)
-	time.Sleep(time.Hour)
+	time.Sleep(5 * time.Minute)
 	UpdatePosts(db)
 }
 
