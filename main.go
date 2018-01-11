@@ -19,7 +19,7 @@ func main() {
 	database = db.InitDB()
 	controllers.DB = database
 	server := router.InitRouter()
-	go util.UpdatePosts(database)
+	go util.StartPeriodicUpdates(database)
 	fmt.Println("Server listening on port 4000!")
 	log.Fatal(http.ListenAndServe(":4000", server))
 }

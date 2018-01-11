@@ -58,6 +58,9 @@ func UpdatePosts(db *sqlx.DB) {
 
 	postTx := db.MustBegin()
 	for _, post := range posts {
+		if post.URL == "" {
+			post.URL = fmt.Sprintf("https://news.ycombinator.com/item?id=%v", post.ID)
+		}
 		postTx.MustExec(`
       REPLACE INTO posts(by, id, score, time, title, type, url, descendants)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
@@ -95,8 +98,15 @@ func UpdatePosts(db *sqlx.DB) {
 
 	fmt.Printf("Updated posts at %s\n", time.Now())
 	fmt.Printf("Top post: %s\n", posts[0].Title)
-	time.Sleep(5 * time.Minute)
-	UpdatePosts(db)
+}
+
+func StartPeriodicUpdates(db *sqlx.DB) {
+	ticker := time.NewTicker(5 * time.Minute)
+	func() {
+		for ; true; <-ticker.C {
+			UpdatePosts(db)
+		}
+	}()
 }
 
 func getHTML(url string) []byte {
