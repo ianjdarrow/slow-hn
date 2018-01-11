@@ -48,7 +48,6 @@ func ScorePosts(posts []models.Post) []models.Score {
 			Time:  now,
 			Score: float64(10.0 / (float64(i) + 2.0)),
 		}
-		fmt.Printf("Score check: %v\n", score.Score)
 		scores = append(scores, score)
 	}
 	return scores
@@ -76,7 +75,7 @@ func UpdatePosts(db *sqlx.DB) {
 		fmt.Printf("Error checking last update time: %s\n", err)
 	}
 	now := time.Now().Unix()
-	if now-lastUpdate > 60*30 {
+	if now-lastUpdate > 60*60 {
 		scores := ScorePosts(posts)
 		scoreTx := db.MustBegin()
 		for _, score := range scores {
